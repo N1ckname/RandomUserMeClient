@@ -7,14 +7,21 @@ import com.example.randomusermeclient.models.UserSummary
 class RandomUsersRepository {
 
     private val users: MutableList<SingleUser> = mutableListOf()
-    suspend fun getUsers() {
-        repeat(25) { _ ->
-            users.add(
-                RemoteDataSource.getUsers().let { SingleUser(UserSummary(1)) }
-            )
-        }
+    suspend fun getUsers(): List<SingleUser> {
+        users.addAll(
+            RemoteDataSource.getUsers().map { item ->
+                SingleUser(
+                    UserSummary(
+                        id = item.loginInfo.uuid,
+                    )
+                )
+            }
+        )
+
+        return users
     }
-    suspend fun getUser(userId: Int): Any {
+
+    suspend fun getUser(userId: String): Any {
         return users.first { user -> user.basis.id == userId }
     }
 }

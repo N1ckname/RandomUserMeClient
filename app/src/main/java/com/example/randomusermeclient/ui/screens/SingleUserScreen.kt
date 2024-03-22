@@ -4,20 +4,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.randomusermeclient.models.SingleUser
+import com.example.randomusermeclient.ui.ScreenUiState
 
 @Composable
 fun SingleUserScreen(
-    userProvider: () -> State<SingleUser>,
+    userProvider: () -> Unit,
+    stateProvider: () -> ScreenUiState,
     modifier: Modifier = Modifier
 ) {
-    SingleUserScreenStateless(
-        fullUserData = userProvider().value,
-        modifier = modifier
-    )
+    userProvider()
+    val state = remember {
+        stateProvider()
+    }
+
+    when (state) {
+        is ScreenUiState.Success -> SingleUserScreenStateless(
+            fullUserData = state.data as SingleUser,
+            modifier = modifier
+        )
+        is ScreenUiState.Error -> ErrorScreen()
+        is ScreenUiState.Loading -> LoadingScreen()
+    }
 }
 @Composable
 fun SingleUserScreenStateless(

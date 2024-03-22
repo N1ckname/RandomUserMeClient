@@ -1,17 +1,47 @@
 package com.example.randomusermeclient.ui
 
-import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.randomusermeclient.datasources.UserDataSource
-import com.example.randomusermeclient.models.SingleUser
+import androidx.lifecycle.viewModelScope
+import com.example.randomusermeclient.RandomUsersRepository
 import com.example.randomusermeclient.models.UserSummary
+import com.example.randomusermeclient.ui.ScreenUiState.Error
+import com.example.randomusermeclient.ui.ScreenUiState.Loading
+import com.example.randomusermeclient.ui.ScreenUiState.Success
+import kotlinx.coroutines.launch
 
-class UsersViewModel: ViewModel() {
-    private val _users = UserDataSource.getUsers().shuffled().toMutableStateList()
-    val users: List<UserSummary>
-        get() = _users
+class UsersViewModel : ViewModel() {
+    var currentScreenState: ScreenUiState by  mutableStateOf(Loading)
+        private set
 
-    fun getUser(userId: Int): State<SingleUser> = mutableStateOf(UserDataSource.getUser(userId))
+    private val usersRepository = RandomUsersRepository()
+
+    init {
+        getUsers()
+    }
+
+    private fun getUsers() {
+        viewModelScope.launch {
+            currentScreenState = Loading
+            currentScreenState = try {
+                val usersSummaries = usersRepository.getUsers().map { item -> UserSummary(item.basis.id) }
+                Success(data = usersSummaries)
+            } catch (error: Throwable) {
+                Error(message = error.message ?: "")
+            }
+        }
+    }
+
+    fun getUser(userId: String) {
+        viewModelScope.launch {
+            currentScreenState = Loading
+            currentScreenState = try {
+                Success(data = usersRepository.getUser(userId))
+            } catch (error: Throwable) {
+                Error(message = error.message ?: "")
+            }
+        }
+    }
 }

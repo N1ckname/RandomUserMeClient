@@ -14,16 +14,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.randomusermeclient.models.UserSummary
+import com.example.randomusermeclient.ui.ScreenUiState
 
 @Composable
 fun UsersScreen(
+    state: ScreenUiState,
+    onItemClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (state) {
+        is ScreenUiState.Success -> UsersScreenStateless(
+            //TODO get rid of unchecked cast
+            usersSummaries = (state.data as? List<UserSummary>) ?: emptyList(),
+            onItemClick = onItemClick,
+            modifier = modifier
+        )
+        is ScreenUiState.Loading -> LoadingScreen()
+        is ScreenUiState.Error -> ErrorScreen(message = state.message)
+    }
+}
+@Composable
+fun UsersScreenStateless(
     usersSummaries: List<UserSummary>,
-    onItemClick: (Int) -> Unit,
+    onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
 ) {
     LazyColumn(
-        state = LazyListState(),
+        state = state,
         modifier = modifier
     ) {
         items(
@@ -63,7 +81,7 @@ fun UserCard(
                 Text(userSummary.fullName)
                 Text(userSummary.address )
                 Text(userSummary.phone)
-                Text(userSummary.id.toString())
+                Text(userSummary.id)
             }
         }
     }

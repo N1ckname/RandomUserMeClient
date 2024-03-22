@@ -24,8 +24,9 @@ fun AppNavHost(
         composable(
             route = "Users",
         ) {
+            //TODO back press resolves into unknown state...
             UsersScreen(
-                usersSummaries = viewModel.users,
+                state = viewModel.currentScreenState,
                 onItemClick = { userId ->
                     navController.navigate("SingleUser/${userId}") {
                         launchSingleTop = true
@@ -36,18 +37,13 @@ fun AppNavHost(
 
         composable(
             route = "SingleUser/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.IntType }),
+            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
         ) { navBackStackEntry ->
-            val userId = navBackStackEntry.arguments?.getInt("userId") ?: -1
-
-            if (userId < 0) {
-                navController.navigate("Users") {
-                    launchSingleTop = true
-                }
-            }
+            val userId = navBackStackEntry.arguments?.getString("userId")!!
 
             SingleUserScreen(
-                userProvider = { viewModel.getUser(userId) }
+                userProvider = { viewModel.getUser(userId) },
+                stateProvider = { viewModel.currentScreenState }
             )
         }
     }
